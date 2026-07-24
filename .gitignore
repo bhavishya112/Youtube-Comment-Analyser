@@ -1,0 +1,8 @@
+/data/
+.env
+/images/
+__pycache__
+.vscode
+settings.json
+videos/
+*.prof
