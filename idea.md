@@ -1,5 +1,11 @@
+V.I.S.I.O.N.<br>-Viewer Insight & Sentiment Intelligence Optimization Network
+
+
 # Project Flow
 
+<div align = "center">
+URL <br>
+↓<br> 
 Comments
 
  ↓ 
@@ -8,15 +14,31 @@ Comments
 
 ↓
 
- Embeddings          }
 
-↓                               |  
 
- HDBSCAN              |----------Bertopic (topic_clustering.py)
+$$
 
-↓                               |
+\left.\begin{array}{l}
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  
+\end{array}
+\right.
+\left.\begin{array}{c}
+Embeddings \\ 
+\\
+\downarrow \\
+\\
+HDBSCAN \\
+\\
+\downarrow \\
+\\
+Topic \space Clusters
+\end{array}
+ \right\}  - Bertopic
 
-Topic Clusters       }
+
+ 
+ 
+$$
 
 ↓
 
@@ -24,11 +46,13 @@ Topic Clusters       }
 
 ↓
 
-Build Dashboard data (Topic Clusters)
+Prepare Dashboard Data
 
 ↓ 
 
 Dashboard
+
+</div>
 
 # Dashboard
 
@@ -257,12 +281,105 @@ Emotion<br>Other
 
 "Music":4
 
-}
+}]
 
-]
+### *Prepared Variables* :
 
+<pre><code>
+video_info : list(dict_keys(['title', 'description', 'tags', 'published_at', 'default_language', 'default_audio_language', 'view_count', 'like_count', 'comment_count']))
 
+------------------------------------------------------------
+
+stats : dict_keys(['total_comments', 'unique_authors', 'total_likes', 'total_replies', 'avg_likes', 'avg_replies', 'topics_found', 'noise_comments'])
+
+------------------------------------------------------------
+
+topic_distribution : list(dict_keys(['topic_id', 'topic_name', 'count']))
+
+------------------------------------------------------------
+
+topics : list(dict_keys(['id', 'name', 'confidence', 'size', 'percentage', 'keywords', 'avg_likes', 'avg_replies', 'total_likes', 'total_replies', 'representative_comment', 'top_comments', 'summary', 'category', 'creator_takeaway']))
+
+------------------------------------------------------------
+
+top_liked : list(dict_keys(['authorDisplayName', 'textOriginal', 'likeCount', 'publishedAt', 'updatedAt', 'totalReplyCount', 'topic_id', 'prob', 'topic_name']))
+
+------------------------------------------------------------
+
+top_discussions : list(dict_keys(['authorDisplayName', 'textOriginal', 'likeCount', 'publishedAt', 'updatedAt', 'totalReplyCount', 'topic_id', 'prob', 'topic_name']))
+
+------------------------------------------------------------
+
+engagement : list(dict_keys(['topic', 'score', 'likes', 'replies']))
+
+------------------------------------------------------------
+
+comments : list(dict_keys(['authorDisplayName', 'textOriginal', 'likeCount', 'publishedAt', 'updatedAt', 'totalReplyCount', 'topic_id', 'prob', 'topic_name']))
+
+------------------------------------------------------------
+
+</code></pre>
+
+### Layout : 
+
+```
+--------------------------------------------------------
+                            Video
+                Views | likes | comments | language 
+--------------------------------------------------------
+
+┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Love     │ │ Hate     │ │ Requests │ │ Topics   │
+└──────────┘ └──────────┘ └──────────┘ └──────────┘
+
+--------------------------------------------------------
+
+Topic Distribution
+
+██████████████ Editing
+██████████ Music
+██████ Thumbnail
+
+--------------------------------------------------------
+(LLM CALL 3)
+AI Insights
+
+Strengths
+Weaknesses
+Requests
+
+--------------------------------------------------------
+
+Topic Explorer
+
+▼ Editing
+
+Summary
+
+Creator Takeaway
+
+Representative comment
+
+Top comments
+
+```
 
 ## UI Generation
 
-- Generate Streamlit UI 
+### Make Landing Page
+
+### Dashboard Graphs (More)
+
+*video_info*<br>
+Tags: word cloud or bar chart of tag frequency.
+
+*topics over time*<br>Line Chart that shows over time what topics are commented and how much
+
+*Noise vs Topics Found*<br>stacked bar or donut chart.
+
+*Pie Chart*<br> share of different categories (in total comments)
+
+
+
+
+

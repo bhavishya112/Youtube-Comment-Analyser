@@ -54,26 +54,26 @@ def build_dashboard_data(
 
     video = video_df.to_dict("records")
 
-    # -------------------------
-    # Topic Distribution
-    # -------------------------
+    # # -------------------------
+    # # Topic Distribution
+    # # -------------------------
 
-    topic_distribution = (
-        df.groupby("topic_name")
-        .size()
-        .sort_values(ascending=False)
-        .reset_index(name="count")
-        .to_dict("records")
-    )
+    # topic_distribution = (
+    #     df.groupby("topic_name")
+    #     .size()
+    #     .sort_values(ascending=False)
+    #     .reset_index(name="count")
+    #     .to_dict("records")
+    # )
 
-    topic_distribution = [
-        {
-            "topic_id": int(top["topic_name"].split("_")[0]),
-            "topic_name": top["topic_name"],
-            "count": top["count"],
-        }
-        for top in topic_distribution
-    ]
+    # topic_distribution = [
+    #     {
+    #         "topic_id": int(top["topic_name"].split("_")[0]),
+    #         "topic_name": top["topic_name"],
+    #         "count": top["count"],
+    #     }
+    #     for top in topic_distribution
+    # ]
 
     
     # -------------------------
@@ -106,8 +106,8 @@ def build_dashboard_data(
 
     for topic_id in topic_info.Topic:
 
-        if topic_id == -1:
-            continue
+        # if topic_id == -1:
+        #     continue
 
         subset = df[df.topic_id == topic_id]
 
@@ -120,9 +120,9 @@ def build_dashboard_data(
 
             "name": topic_model.topic_labels_[topic_id],
 
-            "confidence": round(df.prob[df.topic_id == 0][0],2),
+            "confidence": round(df.loc[df.topic_id == 0, "prob"].iloc[0],2),
 
-            "size": len(subset),
+            "total_comments": len(subset),
 
             "percentage": round(
                 len(subset) / len(df) * 100,
@@ -172,7 +172,7 @@ def build_dashboard_data(
 
         if(result):
             t['summary'] = result['summary']
-            t['category'] = result['category']
+            t['category'] = result['category'].split('|')[0].strip()
             t['creator_takeaway'] = result['creator_takeaway']
 
         else:
@@ -188,7 +188,7 @@ def build_dashboard_data(
 
     for t in topics_data:
 
-        t = (
+        score = (
             t["total_likes"]
             + 5 * t["total_replies"]
         )
@@ -255,11 +255,13 @@ def _clean_llm_json(raw_text: str):
 def _get_summary(value:dict):
     import openai
     client = openai.OpenAI(base_url="http://127.0.0.1:11434/v1",api_key="api_key")
-    system_prompt = {"role":"system","content":"""Analyse the given youtube comment data and return result in json STRICTLY like below:
+    system_prompt = {"role":"system","content":"""Analyse the given youtube comment data and return result in json STRICTLY like below[NOTE : ONLY ONE category is possible
+]:
 {"category": "Love | Hate | Request | Question | Humor | Suggestion",
   "summary": "...",
   "creator_takeaway": "..."
-}"""
+}
+"""
                     }
     user_prompt = {"role":"user","content":"\n".join([f"{k} : {v}" for k, v in value.items()])}
 

@@ -10,6 +10,7 @@ from bertopic.representation import KeyBERTInspired
 
 EMB_MODEL = SentenceTransformer("AkshitaS/bhasha-embed-v0")
 
+
 # representation_model = KeyBERTInspired()
 client = openai.OpenAI(api_key="sk-...",base_url="http://127.0.0.1:11434/v1")
 representation_model = OpenAI(client=client, model="ibm/granite4.1:3b", chat=True)
