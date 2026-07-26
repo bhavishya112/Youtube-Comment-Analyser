@@ -216,7 +216,7 @@ def build_dashboard_data(
 
         "stats": stats,
 
-        "topic_distribution": topic_distribution,
+        # "topic_distribution": topic_distribution,
 
         "topics": topics_data,
 

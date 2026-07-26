@@ -322,24 +322,6 @@ comments : list(dict_keys(['authorDisplayName', 'textOriginal', 'likeCount', 'pu
 
 ### Layout : 
 
-```
---------------------------------------------------------
-                            Video
-                Views | likes | comments | language 
---------------------------------------------------------
-
-┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
-│ Love     │ │ Hate     │ │ Requests │ │ Topics   │
-└──────────┘ └──────────┘ └──────────┘ └──────────┘
-
---------------------------------------------------------
-
-Topic Distribution
-
-██████████████ Editing
-██████████ Music
-██████ Thumbnail
-
 --------------------------------------------------------
 (LLM CALL 3)
 AI Insights
@@ -348,9 +330,31 @@ Strengths
 Weaknesses
 Requests
 
+
+```
+------------------------------------------------------------------
+                            Video
+                Views | likes | comments | language 
+-----------------------------------------------------------------
+┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Topics   │ │ Love     │ │ Hate     │ | Requests │ │Suggestion│
+└──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘
+--------------------------------------------------------------------
+Share of Categories in comments     Tags of the video 
+(Pie Chart)                          (Word Cloud)
+
+
+--------------------------------------------------------
+Topic Distribution              Topics Discussed over time
+(By likes,comments,replies)     (Line Chart)
+
+██████████████ Editing
+██████████ Music
+██████ Thumbnail
+
 --------------------------------------------------------
 
-Topic Explorer
+Detailed Topic Explorer
 
 ▼ Editing
 

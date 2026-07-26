@@ -104,7 +104,7 @@ def get_video_metadata(video_url: str):
 def store_comment_threads(video_url: str, max_comments: int = 10):
     video_id = extract_video_id(video_url)
 
-
+    comments = []
     request = YOUTUBE.commentThreads().list(
         part="snippet",
         videoId=video_id,
@@ -113,10 +113,14 @@ def store_comment_threads(video_url: str, max_comments: int = 10):
         order="relevance",
     )
 
-    response = request.execute()
+    while request:
+        response = request.execute()
+        comments.extend(response["items"])
+        # prepare next page if available
+        request = YOUTUBE.commentThreads().list_next(request, response)
 
     with open(f"data/comments/comments_{video_id}.json", "w", encoding="utf-8") as f:
-        json.dump(response["items"], f, ensure_ascii=False, indent=4)
+        json.dump(comments, f, ensure_ascii=False, indent=4)
 
 
 def get_comments(video_url: str):

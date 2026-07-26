@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 import requests
-
+import re
 st.set_page_config(
     page_title="V.I.S.I.O.N",
     page_icon="🐦‍🔥",
@@ -108,6 +108,7 @@ st.markdown(
             color: #ff8080;
             font-size: 0.85rem;
             margin-top: 0.6rem;
+            background-color: #00004d;
         }
     </style>
     """,
@@ -126,7 +127,8 @@ st.markdown(
     '<div class="hero-sub">Viewer Insight &amp; Sentiment Intelligence Optimization Network</div>',
     unsafe_allow_html=True,
 )
-st.markdown('<div class="hero-cta">Enter a YouTube video URL to get started</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-cta">Enter a YouTube video URL to get started</div>',
+            unsafe_allow_html=True)
 
 video_url = st.text_input(
     "youtube_url",
@@ -135,65 +137,91 @@ video_url = st.text_input(
     key="video_url_input",
 )
 
-FASTAPI_URL = "http://127.0.0.1:8000"
+FASTAPI_URL = "http://127.0.0.1:8001"
 
-if video_url:
+is_youtube = bool(
+    re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$', video_url))
+try:
 
-    # Start the analysis
-    response = requests.post(
-        f"{FASTAPI_URL}/analyse",
-        json={"video_url": video_url},
+    placeholder = st.empty()
+    if not is_youtube and video_url:
+        placeholder.markdown(
+            "<span class='error-note'>❌ Invalid YouTube URL</span>",
+            unsafe_allow_html=True,
+            text_alignment="center"
+        )
+        time.sleep(3)  # Show for 3 seconds
+        placeholder.empty()
+
+    elif is_youtube:
+        response = requests.post(
+            f"{FASTAPI_URL}/analyse",
+            json={"video_url": video_url},
+        )
+        response.raise_for_status()
+
+        response = response.json()
+
+        # st.session_state["variables"] = st.session
+        job_id = response["job_id"]
+
+        with st.status("Starting analysis...", expanded=True) as status:
+
+            previous_stage = None
+
+            while True:
+                r = requests.get(f"{FASTAPI_URL}/status/{job_id}")
+                r.raise_for_status()
+
+                data = r.json()
+
+                stage = data["stage"]
+                state = data["status"]
+
+                if stage != previous_stage:
+                    st.write(stage)
+                    previous_stage = stage
+
+                status.update(
+                    label=stage,
+                    state="running",
+                    expanded=True,
+                )
+
+                if state == "complete":
+                    status.update(
+                        label="Analysis complete!",
+                        state="complete",
+                        expanded=False,
+                    )
+                    result = requests.post(f"{FASTAPI_URL}/result/{job_id}")
+                    result.raise_for_status()
+                    result = result.json()
+                    # print(result, flush=True)
+                    st.session_state["variables"] = result
+                    st.switch_page("pages/dashboard.py")
+                    break
+
+                elif state == "failed":
+                    status.update(
+                        label="Analysis failed",
+                        state="error",
+                        expanded=True,
+                    )
+                    break
+
+                time.sleep(1)
+
+except requests.exceptions.HTTPError as E:
+    placeholder = st.empty()
+    placeholder.markdown(
+        f"<span class='error-note'>{str(E)}</span>",
+        unsafe_allow_html=True,
+        text_alignment="center"
     )
-    response.raise_for_status()
+    time.sleep(3)  # Show for 3 seconds
+    placeholder.empty()
 
-    job_id = response.json()["job_id"]
-
-    # Show live status
-    with st.status("Starting analysis...", expanded=True) as status:
-
-        previous_stage = None
-
-        while True:
-
-            r = requests.get(f"{FASTAPI_URL}/status/{job_id}")
-            r.raise_for_status()
-
-            data = r.json()
-
-            stage = data["stage"]
-            # progress = data["progress"]
-            state = data["status"]
-
-            # Only write when the stage changes
-            if stage != previous_stage:
-                st.write(stage)
-                previous_stage = stage
-
-            status.update(
-                label=f"{stage}",#{progress}% • 
-                state="running",
-                expanded=True,
-            )
-
-            if state == "completed":
-                status.update(
-                    label="Analysis complete!",
-                    state="complete",
-                    expanded=False,
-                )
-
-                st.session_state["job_id"] = job_id
-                st.switch_page("pages/dashboard.py")
-                break
-
-            elif state == "failed":
-                status.update(
-                    label="Analysis failed",
-                    state="error",
-                )
-                break
-
-            time.sleep(1)
 
 st.markdown(
     '<div class="footnote">This system uses advanced ML techniques to analyse comment sentiment, engagement patterns and viewer intent.</div>',
