@@ -1,12 +1,13 @@
+import re
 from collections import Counter, defaultdict
 import numpy as np
 import pandas as pd
 import json
-from IPython import embed 
+from IPython import embed
 
 
 def build_dashboard_data(
-    video_df:pd.DataFrame,
+    video_df: pd.DataFrame,
     comments_df: pd.DataFrame,
     topics,
     topic_model,
@@ -23,14 +24,14 @@ def build_dashboard_data(
 
     topics : BERTopic topic ids
     """
-    
+
     df = comments_df.copy()
 
     df["topic_id"] = topics
     df["prob"] = probabilities
     df["topic_name"] = df["topic_id"].map(topic_model.topic_labels_)
     df["topic_name"] = df["topic_name"].fillna("Noise")
-    # from IPython import embed 
+    # from IPython import embed
     # embed()
 
     # -------------------------
@@ -48,9 +49,9 @@ def build_dashboard_data(
         "noise_comments": int((df.topic_id == -1).sum()),
     }
 
-    #--------------------------
+    # --------------------------
     # VIDEO DATA
-    #---------------------------
+    # ---------------------------
 
     video = video_df.to_dict("records")
 
@@ -75,7 +76,6 @@ def build_dashboard_data(
     #     for top in topic_distribution
     # ]
 
-    
     # -------------------------
     # Top liked comments
     # -------------------------
@@ -120,7 +120,7 @@ def build_dashboard_data(
 
             "name": topic_model.topic_labels_[topic_id],
 
-            "confidence": round(df.loc[df.topic_id == 0, "prob"].iloc[0],2),
+            "confidence": round(df.loc[df.topic_id == 0, "prob"].iloc[0], 2),
 
             "total_comments": len(subset),
 
@@ -150,27 +150,26 @@ def build_dashboard_data(
                 subset.sort_values(
                     "likeCount",
                     ascending=False
-                ).head(5).to_dict("records"),
+            ).head(5).to_dict("records"),
 
             # ---------- NEEDS LLM ----------
             "summary": None,
             "category": None,          # love/hate/request/question...
             "creator_takeaway": None,
         })
-    
+
     for t in topics_data:
         value = {
-            "topic_name":t['name'],
-            "repr_comments":topic_model.get_representative_docs(t['id'])[:5],
-            "size_percent":t['percentage'],
-            "likes_percentage":t['total_likes']/stats["total_likes"],
-            "replies_percentage":t['total_replies']/stats["total_replies"]
+            "topic_name": t['name'].split('_')[1].title(),
+            "repr_comments": topic_model.get_representative_docs(t['id'])[:5],
+            "size_percent": t['percentage'],
+            "likes_percentage": t['total_likes']/stats["total_likes"],
+            "replies_percentage": t['total_replies']/stats["total_replies"]
         }
 
+        result: dict = _get_summary(value)
 
-        result:dict = _get_summary(value)
-
-        if(result):
+        if (result):
             t['summary'] = result['summary']
             t['category'] = result['category'].split('|')[0].strip()
             t['creator_takeaway'] = result['creator_takeaway']
@@ -212,7 +211,7 @@ def build_dashboard_data(
     # from IPython import embed
     # embed()
     return {
-        "video_info":video,
+        "video_info": video,
 
         "stats": stats,
 
@@ -229,7 +228,6 @@ def build_dashboard_data(
         "comments": df.to_dict("records")
     }
 
-import re
 
 def _clean_llm_json(raw_text: str):
     """
@@ -251,22 +249,26 @@ def _clean_llm_json(raw_text: str):
     except Exception as e:
         print("Failed to parse JSON:", e)
         return None
-    
-def _get_summary(value:dict):
+
+
+def _get_summary(value: dict):
     import openai
-    client = openai.OpenAI(base_url="http://127.0.0.1:11434/v1",api_key="api_key")
-    system_prompt = {"role":"system","content":"""Analyse the given youtube comment data and return result in json STRICTLY like below[NOTE : ONLY ONE category is possible
+    client = openai.OpenAI(
+        base_url="http://127.0.0.1:11434/v1", api_key="api_key")
+    system_prompt = {"role": "system", "content": """Analyse the given youtube comment data and return result in json STRICTLY like below[NOTE : ONLY ONE category is possible
 ]:
 {"category": "Love | Hate | Request | Question | Humor | Suggestion",
   "summary": "...",
   "creator_takeaway": "..."
 }
 """
-                    }
-    user_prompt = {"role":"user","content":"\n".join([f"{k} : {v}" for k, v in value.items()])}
+                     }
+    user_prompt = {"role": "user", "content": "\n".join(
+        [f"{k} : {v}" for k, v in value.items()])}
 
-    response = client.chat.completions.create(model = "ibm/granite4.1:3b",messages= [system_prompt,user_prompt])
+    response = client.chat.completions.create(
+        model="ibm/granite4.1:3b", messages=[system_prompt, user_prompt])
     ans = response.choices[0].message.content
-    print("response : ",ans)
+    print("response : ", ans)
 
     return _clean_llm_json(ans)

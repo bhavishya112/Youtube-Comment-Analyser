@@ -37,7 +37,7 @@ def extract_video_id(url: str) -> str:
     raise ValueError("Could not extract video ID.")
 
 
-def store_video_metadata(video_url):
+def download_video_metadata(video_url):
     video_id = extract_video_id(video_url)
     request = YOUTUBE.videos().list(
         part="snippet,statistics",
@@ -54,30 +54,32 @@ def store_video_metadata(video_url):
     snippet = item["snippet"]
     statistics = item.get("statistics", {})
 
-    with open(f"data/videos/video_{video_id}.json","w",encoding="utf-8") as fp:
+    with open(f"data/videos/video_{video_id}.json", "w", encoding="utf-8") as fp:
         json.dump(obj={
-                "video_id": video_id,
-                "title": snippet.get("title"),
-                "description": snippet.get("description"),
-                "tags": snippet.get("tags", []),
-                "category_id": snippet.get("categoryId"),
-                "channel_id": snippet.get("channelId"),
-                "channel_title": snippet.get("channelTitle"),
-                "published_at": snippet.get("publishedAt"),
-                "default_language": snippet.get("defaultLanguage"),
-                "default_audio_language": snippet.get("defaultAudioLanguage"),
-                "view_count": statistics.get("viewCount"),
-                "like_count": statistics.get("likeCount"),
-                "comment_count": statistics.get("commentCount"),
-            },
+            "video_id": video_id,
+            "title": snippet.get("title"),
+            "description": snippet.get("description"),
+            "tags": snippet.get("tags", []),
+            "category_id": snippet.get("categoryId"),
+            "channel_id": snippet.get("channelId"),
+            "channel_title": snippet.get("channelTitle"),
+            "published_at": snippet.get("publishedAt"),
+            "default_language": snippet.get("defaultLanguage"),
+            "default_audio_language": snippet.get("defaultAudioLanguage"),
+            "view_count": statistics.get("viewCount"),
+            "like_count": statistics.get("likeCount"),
+            "comment_count": statistics.get("commentCount"),
+        },
             fp=fp,
             ensure_ascii=False, indent=4)
+
 
 def get_video_metadata(video_url: str):
     video_id = extract_video_id(video_url)
     path = f"./data/videos/video_{video_id}.json"
     if not os.path.exists(path):
-        raise FileNotFoundError(f"No comment data found for video id {video_id}")
+        raise FileNotFoundError(
+            f"No comment data found for video id {video_id}")
 
     with open(path, "r", encoding="utf-8") as fp:
         result = json.load(fp)
@@ -101,7 +103,7 @@ def get_video_metadata(video_url: str):
     return df
 
 
-def store_comment_threads(video_url: str, max_comments: int = 10):
+def download_comment_threads(video_url: str, max_comments: int = 10):
     video_id = extract_video_id(video_url)
 
     comments = []
@@ -127,7 +129,8 @@ def get_comments(video_url: str):
     video_id = extract_video_id(video_url)
     path = f"./data/comments/comments_{video_id}.json"
     if not os.path.exists(path):
-        raise FileNotFoundError(f"No comment data found for video id {video_id}")
+        raise FileNotFoundError(
+            f"No comment data found for video id {video_id}")
 
     with open(path, "r", encoding="utf-8") as fp:
         result = json.load(fp)
@@ -151,5 +154,5 @@ def get_comments(video_url: str):
 if __name__ == "__main__":
 
     url = input("YouTube URL: ")
-    store_comment_threads(url, max_comments=50)
+    download_comment_threads(url, max_comments=50)
     print(get_comments(url).to_markdown)

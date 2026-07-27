@@ -1,8 +1,8 @@
 import umap
 import numpy as np
 import plotly.express as px
-from topic_clustering import get_embeddings, cluster_comments
-from scrape_data import get_comments
+from backend.topic_clustering import get_embeddings, cluster_comments
+from backend.scrape_data import get_comments
 
 while True:
     df = get_comments(input("youtube URL : "))
