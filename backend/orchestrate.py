@@ -45,24 +45,39 @@ def start_analysis(video: Video):
     return {"job_id": job_id}
 
 
-def gather_data(job_id: str, status: dict, youtube_url: str): #status = {"stage":"---","status":"---"}
+# status = {"stage":"---","status":"---"}
+def gather_data(job_id: str, status: dict, youtube_url: str):
 
     video_id = extract_video_id(youtube_url)
     if (not os.path.exists(f"data/comments/comments_{video_id}.json")):
-        download_comment_threads(status,youtube_url, 500)
+        status['stage'] = 'downloading comments'
+        download_comment_threads(youtube_url, 500)
 
     if (not os.path.exists(f"data/videos/video_{video_id}.json")):
-        download_video_metadata(status,youtube_url)
+        status['stage'] = 'downloading video metadata'
+        download_video_metadata(youtube_url)
 
-    df_video = get_video_metadata(status,youtube_url)
-    df_comments = get_comments(status,youtube_url)
+    status['stage'] = 'retrieving data'
+    df_video = get_video_metadata(youtube_url)
+    df_comments = get_comments(youtube_url)
 
     docs = df_comments["textOriginal"].tolist()
-    topic_model, topics, probs = cluster_comments(status,docs)
-    variables = build_dashboard_data(status,video_df=df_video, comments_df=df_comments,
+
+    status['stage'] = 'clustering comments'
+    topic_model, topics, probs = cluster_comments(docs)
+
+    status['stage'] = 'preparing dashboard variables'
+    variables = build_dashboard_data(video_df=df_video, comments_df=df_comments,
                                      topics=topics, topic_model=topic_model, probabilities=probs)
+
+    status['stage'] = 'storing variables'
+    with open("backend/variables_state.pkl", "wb") as fb:
+        pickle.dump(variables,fb)
+
     # return variables
     VARIABLES[job_id] = {"variables": variables}
+
+    status['status'] = 'complete'
 
 # def gather_data(job_id: str, youtube_url: str): #dummy gather_data
 #     with open("backend/variables_state.pkl", "rb") as fb:

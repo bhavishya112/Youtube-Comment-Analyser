@@ -8,3 +8,4 @@ videos/
 *.prof
 *.agents
 *.pkl
+logs

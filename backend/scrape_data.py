@@ -102,27 +102,48 @@ def get_video_metadata(video_url: str):
 
     return df
 
+from pathlib import Path
+from googleapiclient.errors import HttpError
 
 def download_comment_threads(video_url: str, max_comments: int = 10):
     video_id = extract_video_id(video_url)
 
     comments = []
+    page_size = min(max_comments, 100)
+
     request = YOUTUBE.commentThreads().list(
         part="snippet",
         videoId=video_id,
-        maxResults=max_comments,
+        maxResults=page_size,
         textFormat="plainText",
         order="relevance",
     )
 
-    while request:
-        response = request.execute()
-        comments.extend(response["items"])
-        # prepare next page if available
-        request = YOUTUBE.commentThreads().list_next(request, response)
+    try:
+        while request and len(comments) < max_comments:
+            response = request.execute()
+            comments.extend(response["items"])
 
-    with open(f"data/comments/comments_{video_id}.json", "w", encoding="utf-8") as f:
-        json.dump(comments, f, ensure_ascii=False, indent=4)
+            if len(comments) >= max_comments:
+                comments = comments[:max_comments]
+                break
+
+            request = YOUTUBE.commentThreads().list_next(request, response)
+
+        Path("data/comments").mkdir(parents=True, exist_ok=True)
+
+        with open(
+            f"data/comments/comments_{video_id}.json",
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(comments, f, ensure_ascii=False, indent=4)
+
+        return comments
+
+    except HttpError as e:
+        print(f"YouTube API error: {e}")
+        return []
 
 
 def get_comments(video_url: str):

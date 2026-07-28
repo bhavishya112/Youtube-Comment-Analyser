@@ -55,18 +55,21 @@
 # import umap
 # import numpy as np
 # import plotly.express as px
-# from topic_clustering import get_embeddings, cluster_comments
-# from scrape_data import get_comments
-# from process_data import build_dashboard_data
+# from backend.topic_clustering import get_embeddings, cluster_comments
+# from backend.scrape_data import get_comments,get_video_metadata
+# from backend.process_data import build_dashboard_data
 
 # from IPython import embed
 # df = get_comments("https://www.youtube.com/watch?v=RBRiNVfvSxU&t=736s")
 
+# df_video =  get_video_metadata("https://www.youtube.com/watch?v=RBRiNVfvSxU&t=736s")
+# docs = df["textOriginal"].tolist()
+# topic_model,topics, probs = cluster_comments(docs)
+
 # def gather_data(youtube_url:str):
-#     docs = df["textOriginal"].tolist()
-#     topic_model,topics, probs = cluster_comments(docs)
-#     variables = build_dashboard_data(comments_df=df,topics=topics,topic_model=topic_model,probabilities=probs)
-#     # embed()
+#     variables = build_dashboard_data(video_df = df_video ,comments_df=df,topics=topics,topic_model=topic_model,probabilities=probs)
+#     from IPython import embed
+#     embed()
 
 
 # while True:
@@ -75,10 +78,16 @@
 
 
 
-import requests
+# import requests
 
-response = requests.request(method='post',url='http://localhost:8001/analyse',json={"url":"https://www.youtube.com/watch?v=MmNFJ4CGvyw&t=1141s"}).json()
-print("type:response = ",type(response))
-print("response = ",response)
+# response = requests.request(method='post',url='http://localhost:8001/analyse',json={"url":"https://www.youtube.com/watch?v=MmNFJ4CGvyw&t=1141s"}).json()
+# print("type:response = ",type(response))
+# print("response = ",response)
 
 
+# from backend.scrape_data import download_comment_threads
+
+# download_comment_threads()
+
+import winsound
+winsound.Beep(1000,1000)

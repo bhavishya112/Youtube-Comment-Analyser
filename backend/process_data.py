@@ -30,6 +30,10 @@ def build_dashboard_data(
     df["topic_id"] = topics
     df["prob"] = probabilities
     df["topic_name"] = df["topic_id"].map(topic_model.topic_labels_)
+    df["topic_name"] = df["topic_name"].apply(
+        lambda x: x.split("_")[1].title() if isinstance(
+            x, str) and "_" in x else x
+    )
     df["topic_name"] = df["topic_name"].fillna("Noise")
     # from IPython import embed
     # embed()
@@ -118,7 +122,7 @@ def build_dashboard_data(
 
             "id": int(topic_id),
 
-            "name": topic_model.topic_labels_[topic_id],
+            "name": (df.topic_name[df.topic_id == topic_id]).iloc[0],
 
             "confidence": round(df.loc[df.topic_id == 0, "prob"].iloc[0], 2),
 
@@ -160,7 +164,7 @@ def build_dashboard_data(
 
     for t in topics_data:
         value = {
-            "topic_name": t['name'].split('_')[1].title(),
+            "topic_name": t['name'],
             "repr_comments": topic_model.get_representative_docs(t['id'])[:5],
             "size_percent": t['percentage'],
             "likes_percentage": t['total_likes']/stats["total_likes"],

@@ -210,7 +210,7 @@ try:
                     )
                     break
 
-                time.sleep(1)
+                time.sleep(5)
 
 except requests.exceptions.HTTPError as E:
     placeholder = st.empty()
