@@ -169,7 +169,7 @@ def get_comments(video_url: str):
         ]
     ]
 
-    return df
+    return df.drop_duplicates()
 
 
 if __name__ == "__main__":

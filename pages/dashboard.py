@@ -24,7 +24,7 @@ try:
 
     def human_readable(num: str):
 
-        if (not num.isnumeric()):
+        if (not num or not num.isnumeric()):
             return num
         num = int(num)
         if num >= 1_000_000_000:
@@ -392,6 +392,7 @@ try:
 
     # Build word cloud
     text = " ".join(tags)
+    text += " tags"
     wordcloud = WordCloud(
         # width=800,
         height=440,

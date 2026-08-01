@@ -51,7 +51,7 @@ def gather_data(job_id: str, status: dict, youtube_url: str):
     video_id = extract_video_id(youtube_url)
     if (not os.path.exists(f"data/comments/comments_{video_id}.json")):
         status['stage'] = 'downloading comments'
-        download_comment_threads(youtube_url, 500)
+        download_comment_threads(youtube_url, 2000)
 
     if (not os.path.exists(f"data/videos/video_{video_id}.json")):
         status['stage'] = 'downloading video metadata'
