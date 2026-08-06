@@ -38,6 +38,7 @@ def extract_video_id(url: str) -> str:
 
 
 def download_video_metadata(video_url):
+    """Downloads Video Information from the youtube api and stores it in data/videos as Json"""
     video_id = extract_video_id(video_url)
     request = YOUTUBE.videos().list(
         part="snippet,statistics",
@@ -75,6 +76,7 @@ def download_video_metadata(video_url):
 
 
 def get_video_metadata(video_url: str):
+    """Reads the youtube video metadata stored at data/videos as json and returns DataFrame of it"""
     video_id = extract_video_id(video_url)
     path = f"./data/videos/video_{video_id}.json"
     if not os.path.exists(path):
@@ -106,6 +108,7 @@ from pathlib import Path
 from googleapiclient.errors import HttpError
 
 def download_comment_threads(video_url: str, max_comments: int = 10):
+    """Download at most max_comments number of comments and store it in data/comments as Json"""
     video_id = extract_video_id(video_url)
 
     comments = []
@@ -147,6 +150,7 @@ def download_comment_threads(video_url: str, max_comments: int = 10):
 
 
 def get_comments(video_url: str):
+    """Read all the comments stored it in data/comments and return DataFrame of it"""
     video_id = extract_video_id(video_url)
     path = f"./data/comments/comments_{video_id}.json"
     if not os.path.exists(path):
@@ -168,7 +172,7 @@ def get_comments(video_url: str):
             "totalReplyCount",
         ]
     ]
-
+    # return df
     return df.drop_duplicates()
 
 

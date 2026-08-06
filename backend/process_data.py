@@ -9,20 +9,25 @@ from IPython import embed
 def build_dashboard_data(
     video_df: pd.DataFrame,
     comments_df: pd.DataFrame,
-    topics,
+    topics : list[int],
     topic_model,
-    probabilities=None,
+    probabilities:np.ndarray =None,
 ):
     """
-    comments_df columns:
-    -------------------
-    authorDisplayName
-    textOriginal
-    likeCount
-    updatedAt
-    totalReplyCount
-
-    topics : BERTopic topic ids
+    Prepares all the required dashboard variables given the required dataframes and clusters
+    Args:
+        video_df (DataFrame): Contains all the information about the video (it doesn't need to be a DF)
+        comments_df (DataFrame): Contains comments related info, currently the fields are: 
+            authorDisplayName (string) : commentor
+            textOriginal (string utf-8) : non-html form of the comment
+            likeCount (number) : likes count
+            updatedAt (timestamp) : timestamp the comment was edited (or posted)
+            totalReplyCount (number) : total replies to the comment
+        topics (list(int)): BERTopic topic ids 
+        topic_model (BERTopic): the fitted model over the clusters
+        probabilities (list(float)): confidence scores that specify likeliness of a topic to be that particular one
+    Returns:
+        variables (dict[str,list] or dict[str,dict]) : the set of variables processed ready for the dashboard
     """
 
     df = comments_df.copy()
@@ -233,7 +238,7 @@ def build_dashboard_data(
     }
 
 
-def _clean_llm_json(raw_text: str):
+def _clean_llm_json(raw_text: str)->dict:
     """
     Clean and parse JSON-like text from an LLM response.
     Returns a Python dict if successful, else None.
@@ -256,12 +261,14 @@ def _clean_llm_json(raw_text: str):
 
 
 def _get_summary(value: dict):
+    """Sends the topic name, representative comment, and top 5 comments to the local LLM to categorise its emotion and summarise it\\
+    Returns a dictonary {"summary": "---", "category": "----","creator_takeaway": "----" }"""
     import openai
-    client = openai.OpenAI(
-        base_url="http://127.0.0.1:11434/v1", api_key="api_key")
+    client = openai.OpenAI(base_url="http://127.0.0.1:11434/v1", api_key="api_key")
+
     system_prompt = {"role": "system", "content": """Analyse the given youtube comment data and return result in json STRICTLY like below[NOTE : ONLY ONE category is possible
 ]:
-{"category": "Love | Hate | Request | Question | Humor | Suggestion",
+{"category": "Love | Hate | Request | Question | Humor | Suggestion | None",
   "summary": "...",
   "creator_takeaway": "..."
 }

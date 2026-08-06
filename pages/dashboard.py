@@ -164,7 +164,7 @@ try:
             .kpi-card {
                 background: transparent;
                 border-radius: 16px;
-                padding: 1.3rem;
+                padding: 1rem;
                 min-height: 220px;
                 display: flex;
                 flex-direction: column;
@@ -305,7 +305,7 @@ try:
         (
             "<span style='font-size:28px'><b>Topics</b></span>",
             total_topics,
-            f"<span>{total_topics} topics</span><span>{n_total_comments} comments</span>"
+            f"<span>{total_topics} topics</span><span>{n_total_comments} distinct comments</span>"
         ),
         (
             "<span style='font-size:28px'><b>Love</b></span>",
@@ -349,7 +349,8 @@ try:
         "Request": "#c24bff",
         "Suggestion": "#ffb84b",
         "Question": "#4b9bff",
-        "Humor": "#6eed60"
+        "Humor": "#6eed60",
+        "None": "#ffffffd8"
     }
 
     # Match colors to the order of labels
@@ -444,7 +445,7 @@ try:
 
     # Suppose by_comments is your values
     max_val = max(by_comments)
-    threshold = 0.3 * max_val   # 30% of the largest bar
+    threshold = 1   # 30% of the largest bar
 
     # Build textposition list: "inside" if >=30%, else "outside"
     text_positions = [
@@ -515,7 +516,7 @@ try:
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(size = 14,color="#f0e6e6"),
+        font=dict(size=14, color="#f0e6e6"),
         margin=dict(l=10, r=10, t=45, b=60),
         autosize=True,
     )
@@ -543,16 +544,21 @@ try:
         ))
 
     fig4.update_layout(
-        
+
         xaxis=dict(
             type="date",
             tickformatstops=[
-                # when zoomed to days → "15 Jul"
+                # Daily zoom → show day + month
                 dict(dtickrange=[None, 86400000], value="%d %b"),
-                # when zoomed to months → "Jul, Aug"
-                dict(dtickrange=[86400000, 2678400000], value="%b"),
-                # when zoomed to years → "2026"
-                dict(dtickrange=[2678400000, None], value="%Y")
+
+                # Monthly zoom → show month + day
+                dict(dtickrange=[86400000, 2678400000], value="%d %b"),
+
+                # Yearly zoom → show month names
+                dict(dtickrange=[2678400000, 31536000000], value="%b %Y"),
+
+                # Multi‑year zoom → show years
+                dict(dtickrange=[31536000000, None], value="%Y"),
             ],
             rangeselector=dict(
                 buttons=list([
@@ -563,13 +569,13 @@ try:
                 ]),
                 bgcolor="#f0e6e6",
                 # bordercolor="rgba(255,90,90,0.35)",
-                font=dict(size = 14,color="#000000")
+                font=dict(size=14, color="#000000")
             ),
             # rangeslider=dict(visible=True),
             tickformat="%Y-%m-%d",   # removes time part, shows only date
             color="#f0e6e6"
         ),
-        yaxis=dict(title = "N Comments",color="#f0e6e6"),
+        yaxis=dict(title="N Comments", color="#f0e6e6"),
     )
     fig4.update_layout(
         legend=dict(
@@ -579,7 +585,7 @@ try:
             traceorder="normal",
             font=dict(size=14),
             itemsizing="constant",
-            
+
         ),
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -589,7 +595,7 @@ try:
         margin=dict(l=10, r=10, t=45, b=10),
         autosize=True,
     )
-    
+
     row3_col1, row3_col2 = st.columns(2)
 
     with row3_col1:
@@ -627,30 +633,39 @@ try:
     #     "representative_comment": "...",
     #     "top_comments": ["...", "...", "..."],
     # }
-    topics = variables.get("topics", [])
+    topics = pd.DataFrame(variables.get("topics", []))
+
+    categories = (
+        topics.groupby("category")
+        .apply(lambda x: x.to_dict("records"))
+        .to_dict()
+    )
 
     topic_explorer_expanders = []  # array container, one expander per topic
-    for topic in topics:
-        exp = st.expander(f"▼ {topic.get('name', 'Topic')}")
-        with exp:
-            text_frame = st.container(border=True)
-            with text_frame:
-                st.markdown("**Summary**")
-                st.write(topic.get("summary", "—"))
+    for catname, cat in categories.items():
+        ct = st.expander(f"{catname}")
+        with ct:
+            for topic in cat:
+                exp = st.expander(f"{topic.get('name', 'Topic')}")
+                with exp:
+                    text_frame = st.container(border=True)
+                    with text_frame:
+                        st.markdown("**Summary**")
+                        st.write(topic.get("summary", "—"))
 
-                st.markdown("**Creator Takeaway**")
-                st.write(topic.get("creator_takeaway", "—"))
+                        st.markdown("**Creator Takeaway**")
+                        st.write(topic.get("creator_takeaway", "—"))
 
-                st.markdown("**Representative Comment**")
-                st.info(topic.get("representative_comment", "—"))
+                        st.markdown("**Representative Comment**")
+                        st.info(topic.get("representative_comment", "—"))
 
-                st.markdown("**Top Comments**")
-                for comment in topic.get("top_comments", []):
-                    st.write(
-                        f"— {comment['authorDisplayName']} : {comment['textOriginal']} ")
-        topic_explorer_expanders.append(exp)
+                        st.markdown("**Top Comments**")
+                        for comment in topic.get("top_comments", []):
+                            st.write(
+                                f"— {comment['authorDisplayName']} : {comment['textOriginal']} ")
+                topic_explorer_expanders.append(exp)
 
-    if not topics:
+    if topics.empty:
         st.caption(
             "No topics found in `variables['topics']` yet — this section will populate once gather_data() returns topic data.")
 

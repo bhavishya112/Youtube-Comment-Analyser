@@ -13,7 +13,7 @@ logger = setup_logger(__name__,"logs/topic_clustering.log")
 
 try : 
     EMB_MODEL = SentenceTransformer("AkshitaS/bhasha-embed-v0")
-    # EMB_MODEL = SentenceTransformer("bge-m3")
+    # EMB_MODEL = SentenceTransformer("baai/bge-m3")
 
     with open("stopwords.txt","r",encoding="utf-8") as f:
         x = f.readlines()
@@ -46,6 +46,16 @@ try :
 
 
     def cluster_comments(docs: list[str]):
+        """Uses Bertopic for Clustering comments, internally piped to Local LLM for Topic Generation.
+        Since Bertopic natively returns only representative words from the topic, we needed the llm pipeline
+        Args:
+            docs (list(str)): the list of all utf-8 strings (comments having emojis)
+        Returns:
+            Tuple (tuple) : Tuple (topic_model, topics, probabilities)
+                where \\
+                topic_model (BERTopic) : the fitted model\\
+                topics (list(int)) : list of topics ids\\
+                probabilities (ndarray): confidence scores for each topic"""
         representation_model = OpenAI(
             client=client, model="ibm/granite4.1:3b", chat=True)
         hdbscan_model = HDBSCAN(
@@ -53,7 +63,7 @@ try :
         )  # change this
 
         umap_model = UMAP(
-            n_neighbors=15, n_components=5, metric="cosine", min_dist=0.0, random_state=42
+            n_neighbors=50, n_components=5, metric="euclidean", min_dist=0.0, random_state=42
         )
         vectorizer = CountVectorizer(stop_words=STOPWORDS, ngram_range=(1, 2), min_df=2)
 
