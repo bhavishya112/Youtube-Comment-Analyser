@@ -84,6 +84,7 @@ dependencies:
   - fastapi-core=0.138.0=py311haa95532_0
   - fastar=0.11.0=py311h70ad099_0
   - filelock=3.29.4=py311haa95532_0
+  - fmt=12.1.0=ha349831_0
   - font-ttf-dejavu-sans-mono=2.37=hab24e00_0
   - font-ttf-inconsolata=3.000=h77eed37_0
   - font-ttf-source-code-pro=2.038=h77eed37_0
@@ -189,6 +190,7 @@ dependencies:
   - libssh2=1.11.1=h2addb87_0
   - libthrift=0.22.0=ha2884a9_0
   - libtiff=4.7.1=h3a18249_0
+  - libtorch=2.10.0=cpu_mkl_h0600a82_103
   - libutf8proc=2.11.3=hd3ee48b_1
   - libuv=1.52.1=hd0d7782_0
   - libwebp-base=1.6.0=hbf3958f_0
@@ -229,6 +231,7 @@ dependencies:
   - opencl-headers=2025.07.22=h885b0b7_0
   - openjpeg=2.5.4=h0e57b4f_0
   - openssl=3.6.3=hf411b9b_0
+  - optree=0.18.0=py311h03f52e7_0
   - orc=2.2.0=h1e45922_2
   - packaging=26.0=py311haa95532_0
   - pandas=3.0.3=py311hf6ff4c0_0
@@ -248,6 +251,7 @@ dependencies:
   - pyarrow=23.0.1=cpu_py311h1c66dc0_3
   - pyasn1=0.6.4=pyhcf101f3_0
   - pyasn1-modules=0.4.2=pyhd8ed1ab_0
+  - pybind11-abi=5=hd3eb1b0_0
   - pycparser=3.0=pyhcf101f3_0
   - pydantic=2.13.4=pyhcf101f3_0
   - pydantic-core=2.46.4=py311hf51aa87_0
@@ -266,7 +270,7 @@ dependencies:
   - python-tzdata=2026.2=pyhd3eb1b0_0
   - python-xxhash=3.7.0=py311hf9b03d5_0
   - python_abi=3.11=2_cp311
-  - pytorch=2.2.2=py3.11_cuda12.1_cudnn8_0
+  - pytorch=2.10.0=cpu_mkl_py311h1dec31c_103
   - pytorch-cuda=12.1=hde6ce7c_6
   - pytorch-mutex=1.0=cuda
   - pyu2f=0.1.5=pyhd8ed1ab_1
@@ -298,6 +302,7 @@ dependencies:
   - setuptools=83.0.0=py311haa95532_0
   - shellingham=1.5.4=py311haa95532_0
   - six=1.17.0=pyhe01879c_1
+  - sleef=3.9.0=no_openmp_h63dc1fb_2
   - smmap=5.0.2=py311haa95532_0
   - snakeviz=2.2.2=pyhd8ed1ab_1
   - snappy=1.2.2=hab6b7b3_1
