@@ -58,6 +58,7 @@ try :
                 probabilities (ndarray): confidence scores for each topic"""
         representation_model = OpenAI(
             client=client, model="ibm/granite4.1:3b", chat=True)
+            # client=client, model="gemma3n:e2b", chat=True)
         hdbscan_model = HDBSCAN(
             min_cluster_size=10, metric="euclidean", prediction_data=True
         )  # change this

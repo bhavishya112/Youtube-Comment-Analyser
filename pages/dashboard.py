@@ -350,14 +350,14 @@ try:
         "Suggestion": "#ffb84b",
         "Question": "#4b9bff",
         "Humor": "#6eed60",
-        "None": "#ffffffd8"
+        "Other": "#ffffffee"
     }
 
     # Match colors to the order of labels
     labels = category_counts.index
     # logger.info("labels : %s",labels)
     values = category_counts.values
-    colors = [category_colors.get(cat, "gray")
+    colors = [category_colors.get(cat, "#A2C5C7FF")
               for cat in labels]  # default gray if not mapped
 
     # Create Pie Chart

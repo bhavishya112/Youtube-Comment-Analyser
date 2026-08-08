@@ -9,9 +9,9 @@ from IPython import embed
 def build_dashboard_data(
     video_df: pd.DataFrame,
     comments_df: pd.DataFrame,
-    topics : list[int],
+    topics: list[int],
     topic_model,
-    probabilities:np.ndarray =None,
+    probabilities: np.ndarray = None,
 ):
     """
     Prepares all the required dashboard variables given the required dataframes and clusters
@@ -238,7 +238,7 @@ def build_dashboard_data(
     }
 
 
-def _clean_llm_json(raw_text: str)->dict:
+def _clean_llm_json(raw_text: str) -> dict:
     """
     Clean and parse JSON-like text from an LLM response.
     Returns a Python dict if successful, else None.
@@ -264,11 +264,12 @@ def _get_summary(value: dict):
     """Sends the topic name, representative comment, and top 5 comments to the local LLM to categorise its emotion and summarise it\\
     Returns a dictonary {"summary": "---", "category": "----","creator_takeaway": "----" }"""
     import openai
-    client = openai.OpenAI(base_url="http://127.0.0.1:11434/v1", api_key="api_key")
+    client = openai.OpenAI(
+        base_url="http://127.0.0.1:11434/v1", api_key="api_key")
 
-    system_prompt = {"role": "system", "content": """Analyse the given youtube comment data and return result in json STRICTLY like below[NOTE : ONLY ONE category is possible
+    system_prompt = {"role": "system", "content": """Analyse the given youtube comment data from a youtube creator's point of view and return result in json STRICTLY like below[NOTE : ONLY ONE category is possible
 ]:
-{"category": "Love | Hate | Request | Question | Humor | Suggestion | None",
+{"category": "Love | Hate | Request | Question | Humor | Suggestion | Other",
   "summary": "...",
   "creator_takeaway": "..."
 }
@@ -279,6 +280,7 @@ def _get_summary(value: dict):
 
     response = client.chat.completions.create(
         model="ibm/granite4.1:3b", messages=[system_prompt, user_prompt])
+        # model="gemma3n:e2b", messages=[system_prompt, user_prompt])
     ans = response.choices[0].message.content
     print("response : ", ans)
 

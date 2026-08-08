@@ -42,7 +42,7 @@ def start_analysis(video: Video):
     job_id = str(uuid.uuid4())
 
     STATUS[job_id] = {
-        "status": "running",
+        "state": "running",
         "stage": "analysing..."
     }
 
@@ -52,47 +52,52 @@ def start_analysis(video: Video):
     return {"job_id": job_id}
 
 
-# status = {"stage":"---","status":"---"}
+# status = {"stage":"---","state":"---"}
 def gather_data(job_id: str, status: dict, youtube_url: str):
-    """Does all the Download-Read-PreProcess Logic, Performance Main Orchestration Logic. 
-    Stores the calculated and processed variables inside variables_state.pkl because at refresh the dashboard lost its data
+    try:
+        """Does all the Download-Read-PreProcess Logic, Performance Main Orchestration Logic. 
+        Stores the calculated and processed variables inside variables_state.pkl because at refresh the dashboard lost its data
 
-    Args:
-        job_id (str): job_id of the server
-        status (dict): the internal status variable for updating frontend about inner processes (see STATUS)
-        youtube_url (str): youtube's video_url to start gathering the comments
-    """
+        Args:
+            job_id (str): job_id of the server
+            status (dict): the internal status variable for updating frontend about inner processes (see STATUS)
+            youtube_url (str): youtube's video_url to start gathering the comments
+        """
 
-    video_id = extract_video_id(youtube_url)
-    if (not os.path.exists(f"data/comments/comments_{video_id}.json")):
-        status['stage'] = 'downloading comments'
-        download_comment_threads(youtube_url, 30000)
+        video_id = extract_video_id(youtube_url)
+        if (not os.path.exists(f"data/comments/comments_{video_id}.json")):
+            status['stage'] = 'downloading comments'
+            download_comment_threads(youtube_url, 30000)
 
-    if (not os.path.exists(f"data/videos/video_{video_id}.json")):
-        status['stage'] = 'downloading video metadata'
-        download_video_metadata(youtube_url)
+        if (not os.path.exists(f"data/videos/video_{video_id}.json")):
+            status['stage'] = 'downloading video metadata'
+            download_video_metadata(youtube_url)
 
-    status['stage'] = 'retrieving data'
-    df_video = get_video_metadata(youtube_url)
-    df_comments = get_comments(youtube_url)
+        status['stage'] = 'retrieving data'
+        df_video = get_video_metadata(youtube_url)
+        df_comments = get_comments(youtube_url)
 
-    docs = df_comments["textOriginal"].tolist()
+        docs = df_comments["textOriginal"].tolist()
 
-    status['stage'] = 'clustering comments'
-    topic_model, topics, probs = cluster_comments(docs)
+        status['stage'] = 'clustering comments'
+        topic_model, topics, probs = cluster_comments(docs)
 
-    status['stage'] = 'preparing dashboard variables'
-    variables = build_dashboard_data(video_df=df_video, comments_df=df_comments,
-                                     topics=topics, topic_model=topic_model, probabilities=probs)
+        status['stage'] = 'preparing dashboard variables'
+        variables = build_dashboard_data(video_df=df_video, comments_df=df_comments,
+                                         topics=topics, topic_model=topic_model, probabilities=probs)
 
-    status['stage'] = 'storing variables'
-    with open("backend/variables_state.pkl", "wb") as fb:
-        pickle.dump(variables, fb)
+        status['stage'] = 'storing variables'
+        with open("backend/variables_state.pkl", "wb") as fb:
+            pickle.dump(variables, fb)
 
-    # return variables
-    VARIABLES[job_id] = {"variables": variables}
+        # return variables
+        VARIABLES[job_id] = {"variables": variables}
 
-    status['status'] = 'complete'
+        status['state'] = 'complete'
+    except Exception as E:
+        import winsound
+        winsound.Beep(1000, 1000)
+        status['state'] = 'failed'
 
 # def gather_data(job_id: str, youtube_url: str): #dummy gather_data
 #     with open("backend/variables_state.pkl", "rb") as fb:
@@ -121,7 +126,7 @@ def get_status(job_id: str):
     Args:
         job_id (str): Job Id of the process in the server
     Returns:
-        status (dict): status of the form {"status":"running","stage":"downloading data"}"""
+        status (dict): status of the form {"state":"running","stage":"downloading data"}"""
     return STATUS[job_id]
 
 

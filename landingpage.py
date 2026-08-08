@@ -176,7 +176,7 @@ try:
                 data = r.json()
 
                 stage = data["stage"]
-                state = data["status"]
+                state = data["state"]
 
                 if stage != previous_stage:
                     st.write(stage)
@@ -204,7 +204,7 @@ try:
 
                 elif state == "failed":
                     status.update(
-                        label="Analysis failed",
+                        label="Analysis failed, we'll try to fix it",
                         state="error",
                         expanded=True,
                     )

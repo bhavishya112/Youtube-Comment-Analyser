@@ -120,6 +120,23 @@ def download_comment_threads(video_url: str, max_comments: int = 10):
         maxResults=page_size,
         textFormat="plainText",
         order="relevance",
+        fields="""
+            items(
+                snippet(
+                    totalReplyCount,
+                    topLevelComment(
+                        snippet(
+                            authorDisplayName,
+                            textOriginal,
+                            likeCount,
+                            publishedAt,
+                            updatedAt
+                        )
+                    )
+                )
+            ),
+            nextPageToken
+        """.replace("\n", "").replace(" ", "")
     )
 
     try:
