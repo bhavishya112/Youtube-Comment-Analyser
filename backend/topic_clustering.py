@@ -8,22 +8,41 @@ import openai
 from bertopic.representation import OpenAI
 from bertopic.representation import KeyBERTInspired
 from logger import setup_logger
+from bertopic._utils import MyLogger
+import logging 
+logger = MyLogger()
 
-logger = setup_logger(__name__,"logs/topic_clustering.log")
+logger.configure("INFO")  # Tracks only ERROR and CRITICAL levels
 
-try : 
+# 2. Extract the underlying standard Python logger object
+bertopic_base_logger = logging.getLogger("BERTopic")
+
+# 3. Create a file handler to route the log stream to a text file
+file_handler = logging.FileHandler("logs/topic_clustering.log", mode="a")
+
+# 4. Set a readable formatting layout for the file output
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+file_handler.setFormatter(formatter)
+
+# 5. Attach the file handler to BERTopic's logger engine
+bertopic_base_logger.addHandler(file_handler)
+
+
+# logger = setup_logger(__name__, "logs/topic_clustering.log")
+
+try:
     EMB_MODEL = SentenceTransformer("AkshitaS/bhasha-embed-v0")
     # EMB_MODEL = SentenceTransformer("baai/bge-m3")
 
-    with open("stopwords.txt","r",encoding="utf-8") as f:
+    with open("stopwords.txt", "r", encoding="utf-8") as f:
         x = f.readlines()
         x = [word.strip() for word in x]
 
     STOPWORDS = x
 
     # representation_model = KeyBERTInspired()
-    client = openai.OpenAI(api_key="sk-...", base_url="http://127.0.0.1:11434/v1")
-
+    client = openai.OpenAI(
+        api_key="sk-...", base_url="http://127.0.0.1:11434/v1")
 
     class OpenAIEmbeddings:
         def __init__(self, model="bge-m3"):
@@ -39,11 +58,9 @@ try :
             # convert list of embedding vectors to a 2D numpy array
             return np.asarray(embeddings, dtype=float)
 
-
     def get_embeddings(docs: list[str]):
         # return OpenAIEmbeddings()(docs)
         return np.asarray(EMB_MODEL.encode(docs))
-
 
     def cluster_comments(docs: list[str]):
         """Uses Bertopic for Clustering comments, internally piped to Local LLM for Topic Generation.
@@ -58,7 +75,7 @@ try :
                 probabilities (ndarray): confidence scores for each topic"""
         representation_model = OpenAI(
             client=client, model="ibm/granite4.1:3b", chat=True)
-            # client=client, model="gemma3n:e2b", chat=True)
+        # client=client, model="gemma3n:e2b", chat=True)
         hdbscan_model = HDBSCAN(
             min_cluster_size=10, metric="euclidean", prediction_data=True
         )  # change this
@@ -66,7 +83,8 @@ try :
         umap_model = UMAP(
             n_neighbors=50, n_components=5, metric="euclidean", min_dist=0.0, random_state=42
         )
-        vectorizer = CountVectorizer(stop_words=STOPWORDS, ngram_range=(1, 2), min_df=2)
+        vectorizer = CountVectorizer(
+            stop_words=STOPWORDS, ngram_range=(1, 2), min_df=2)
 
         from bertopic import BERTopic
 
@@ -91,9 +109,9 @@ try :
 
 except Exception as E:
     from winsound import Beep
-    import sys 
-    logger.exception(E.with_traceback(sys.exc_info()[2]))
-    Beep(1000,1000)
+    Beep(1000, 1000)
+    import sys
+    logger.exception(E)
 
 # from scrape_comments import get_comments
 

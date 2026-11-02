@@ -1,3 +1,5 @@
+from pathlib import Path
+from googleapiclient.errors import HttpError
 import re
 from urllib.parse import urlparse, parse_qs
 from dotenv import load_dotenv
@@ -104,8 +106,6 @@ def get_video_metadata(video_url: str):
 
     return df
 
-from pathlib import Path
-from googleapiclient.errors import HttpError
 
 def download_comment_threads(video_url: str, max_comments: int = 10):
     """Download at most max_comments number of comments and store it in data/comments as Json"""
@@ -119,24 +119,25 @@ def download_comment_threads(video_url: str, max_comments: int = 10):
         videoId=video_id,
         maxResults=page_size,
         textFormat="plainText",
-        order="relevance",
+        order="time",
         fields="""
-            items(
-                snippet(
-                    totalReplyCount,
-                    topLevelComment(
-                        snippet(
-                            authorDisplayName,
-                            textOriginal,
-                            likeCount,
-                            publishedAt,
-                            updatedAt
+                items(
+                    snippet(
+                        totalReplyCount,
+                        topLevelComment(
+                            id,
+                            snippet(
+                                authorDisplayName,
+                                textOriginal,
+                                likeCount,
+                                publishedAt,
+                                updatedAt
+                            )
                         )
                     )
-                )
-            ),
-            nextPageToken
-        """.replace("\n", "").replace(" ", "")
+                ),
+                nextPageToken
+""".replace("\n", "").replace(" ", "")
     )
 
     try:
@@ -180,17 +181,17 @@ def get_comments(video_url: str):
     df = json_normalize(result)
     df.columns = [col.split(".")[-1] for col in df.columns]
     df = df[
-        [
+        ["id",
             "authorDisplayName",
             "textOriginal",
             "likeCount",
             "publishedAt",
             "updatedAt",
             "totalReplyCount",
-        ]
+         ]
     ]
     # return df
-    return df.drop_duplicates()
+    return df.drop_duplicates(subset='id')
 
 
 if __name__ == "__main__":
