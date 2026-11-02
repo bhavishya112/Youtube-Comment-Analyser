@@ -50,8 +50,6 @@
 #     embed()
 
 
-
-
 # import umap
 # import numpy as np
 # import plotly.express as px
@@ -76,8 +74,6 @@
 #     gather_data("https://www.youtube.com/watch?v=RBRiNVfvSxU&t=736s")
 
 
-
-
 # import requests
 
 # response = requests.request(method='post',url='http://localhost:8001/analyse',json={"url":"https://www.youtube.com/watch?v=MmNFJ4CGvyw&t=1141s"}).json()
@@ -89,5 +85,98 @@
 
 # download_comment_threads()
 
-import winsound
-winsound.Beep(1000,1000)
+# import winsound
+# winsound.Beep(1000,1000)
+from backend.scrape_data import *
+import os.path
+import json
+
+
+def download_comment_threads(video_url: str, max_comments: int = 5000):
+    """Download at most max_comments number of comments and store it in data/comments as Json"""
+    video_id = extract_video_id(video_url)
+
+    comments = []
+    page_size = min(max_comments, 100)
+
+    request = YOUTUBE.commentThreads().list(
+        part="snippet",
+        videoId=video_id,
+        maxResults=page_size,
+        textFormat="plainText",
+        order="time",
+        fields="""
+            items(
+                snippet(
+                    totalReplyCount,
+                    topLevelComment(
+                        snippet(
+                            authorDisplayName,
+                            textOriginal,
+                            likeCount,
+                            publishedAt,
+                            updatedAt
+                        )
+                    )
+                )
+            ),
+            nextPageToken
+        """.replace("\n", "").replace(" ", "")
+    )
+    try:
+        while request and len(comments) < max_comments:
+            response = request.execute()
+            comments.extend(response["items"])
+
+            if len(comments) >= max_comments:
+                comments = comments[:max_comments]
+                break
+
+            request = YOUTUBE.commentThreads().list_next(request, response)
+
+        Path("data/comments").mkdir(parents=True, exist_ok=True)
+
+        with open(
+            f"data/comments/comments_{video_id}.json",
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(comments, f, ensure_ascii=False, indent=4)
+
+        return comments
+
+    except HttpError as e:
+        print(f"YouTube API error: {e}")
+        return []
+
+
+def get_comments(video_url: str):
+    """Read all the comments stored it in data/comments and return DataFrame of it"""
+    video_id = extract_video_id(video_url)
+    path = f"./data/comments/comments_{video_id}.json"
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"No comment data found for video id {video_id}")
+
+    with open(path, "r", encoding="utf-8") as fp:
+        result = json.load(fp)
+
+    df = json_normalize(result)
+    df.columns = [col.split(".")[-1] for col in df.columns]
+    df = df[
+        [
+            "authorDisplayName",
+            "textOriginal",
+            "likeCount",
+            "publishedAt",
+            "updatedAt",
+            "totalReplyCount",
+        ]
+    ]
+    # return df
+    from IPython import embed
+    embed()
+    return df.drop_duplicates()
+
+download_comment_threads("https://www.youtube.com/watch?v=ZPRVIvyz0kk")
+get_comments("https://www.youtube.com/watch?v=ZPRVIvyz0kk")

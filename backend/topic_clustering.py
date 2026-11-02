@@ -108,8 +108,8 @@ try:
         return topic_model, topics, probs
 
 except Exception as E:
-    from winsound import Beep
-    Beep(1000, 1000)
+    # from winsound import Beep
+    # Beep(1000, 1000)
     import sys
     logger.exception(E)
 
