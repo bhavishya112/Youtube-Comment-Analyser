@@ -1,3 +1,5 @@
+from os import getenv
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
@@ -9,29 +11,45 @@ from bertopic.representation import OpenAI
 from bertopic.representation import KeyBERTInspired
 from logger import setup_logger
 from bertopic._utils import MyLogger
-import logging 
-logger = MyLogger()
+import logging
+import os
 
-logger.configure("INFO")  # Tracks only ERROR and CRITICAL levels
-
-# 2. Extract the underlying standard Python logger object
-bertopic_base_logger = logging.getLogger("BERTopic")
-
-# 3. Create a file handler to route the log stream to a text file
-file_handler = logging.FileHandler("logs/topic_clustering.log", mode="a")
-
-# 4. Set a readable formatting layout for the file output
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-file_handler.setFormatter(formatter)
-
-# 5. Attach the file handler to BERTopic's logger engine
-bertopic_base_logger.addHandler(file_handler)
+logging.basicConfig(format="%(asctime)s - %(filename)s - %(message)s",
+                    datefmt="%d %b %H:%M", level=logging.DEBUG, filename=f"logs/{__name__}.log")
 
 
-# logger = setup_logger(__name__, "logs/topic_clustering.log")
+load_dotenv(".env")
+GROQ_API_KEY = getenv("GROQ_API_KEY")
+NIM_API_KEY = getenv("NIM_API_KEY")
+
+EMB_MODEL = "nvidia/nemotron-3-embed-1b"
+
+emb_client = openai.OpenAI(
+    base_url="https://integrate.api.nvidia.com/v1",
+    api_key=NIM_API_KEY
+)
+
+
+def get_embeddings(docs: list[str], input_type="passage"):
+    response = emb_client.embeddings.create(
+        model=EMB_MODEL,
+        input=docs,
+        extra_body={
+            "input_type": input_type,
+            "truncate": "END"
+        }
+    )
+
+    embeddings = [
+        item.embedding
+        for item in sorted(response.data, key=lambda x: x.index)
+    ]
+
+    return np.asarray(embeddings, dtype=np.float32)
+
 
 try:
-    EMB_MODEL = SentenceTransformer("AkshitaS/bhasha-embed-v0")
+    # EMB_MODEL = SentenceTransformer("AkshitaS/bhasha-embed-v0")
     # EMB_MODEL = SentenceTransformer("baai/bge-m3")
 
     with open("stopwords.txt", "r", encoding="utf-8") as f:
@@ -42,25 +60,7 @@ try:
 
     # representation_model = KeyBERTInspired()
     client = openai.OpenAI(
-        api_key="sk-...", base_url="http://127.0.0.1:11434/v1")
-
-    class OpenAIEmbeddings:
-        def __init__(self, model="bge-m3"):
-            self.model = model
-
-        def __call__(self, docs: pd.Series):
-            # docs is a list of strings
-
-            response = client.embeddings.create(
-                input=docs, model=self.model, extra_body={"keep_alive": -1}
-            )
-            embeddings = [i.embedding for i in response.data]
-            # convert list of embedding vectors to a 2D numpy array
-            return np.asarray(embeddings, dtype=float)
-
-    def get_embeddings(docs: list[str]):
-        # return OpenAIEmbeddings()(docs)
-        return np.asarray(EMB_MODEL.encode(docs))
+        api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1")
 
     def cluster_comments(docs: list[str]):
         """Uses Bertopic for Clustering comments, internally piped to Local LLM for Topic Generation.
@@ -74,7 +74,7 @@ try:
                 topics (list(int)) : list of topics ids\\
                 probabilities (ndarray): confidence scores for each topic"""
         representation_model = OpenAI(
-            client=client, model="ibm/granite4.1:3b", chat=True)
+            client=client, model="qwen/qwen3.8-27b", chat=True)
         # client=client, model="gemma3n:e2b", chat=True)
         hdbscan_model = HDBSCAN(
             min_cluster_size=10, metric="euclidean", prediction_data=True
@@ -108,10 +108,10 @@ try:
         return topic_model, topics, probs
 
 except Exception as E:
-    from winsound import Beep
-    Beep(1000, 1000)
+    # from winsound import Beep
+    # Beep(1000, 1000)
     import sys
-    logger.exception(E)
+    logging.error(E)
 
 # from scrape_comments import get_comments
 

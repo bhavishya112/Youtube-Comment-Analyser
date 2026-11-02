@@ -9,3 +9,5 @@ videos/
 *.agents
 *.pkl
 logs
+*.log
+analysis-pip/

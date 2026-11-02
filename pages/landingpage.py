@@ -2,6 +2,11 @@ import streamlit as st
 import time
 import requests
 import re
+from os import getenv
+from dotenv import load_dotenv
+
+load_dotenv(".env")
+
 st.set_page_config(
     page_title="V.I.S.I.O.N",
     page_icon="🐦‍🔥",
@@ -137,7 +142,8 @@ video_url = st.text_input(
     key="video_url_input",
 )
 
-FASTAPI_URL = "http://127.0.0.1:8001"
+# BACKEND_URL = "http://127.0.0.1:8001"
+BACKEND_URL = getenv("BACKEND_URL")
 
 is_youtube = bool(
     re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$', video_url))
@@ -155,7 +161,7 @@ try:
 
     elif is_youtube:
         response = requests.post(
-            f"{FASTAPI_URL}/analyse",
+            f"{BACKEND_URL}/analyse",
             json={"video_url": video_url},
         )
         response.raise_for_status()
@@ -170,7 +176,7 @@ try:
             previous_stage = None
 
             while True:
-                r = requests.get(f"{FASTAPI_URL}/status/{job_id}")
+                r = requests.get(f"{BACKEND_URL}/status/{job_id}")
                 r.raise_for_status()
 
                 data = r.json()
@@ -194,7 +200,7 @@ try:
                         state="complete",
                         expanded=False,
                     )
-                    result = requests.post(f"{FASTAPI_URL}/result/{job_id}")
+                    result = requests.post(f"{BACKEND_URL}/result/{job_id}")
                     result.raise_for_status()
                     result = result.json()
                     # print(result, flush=True)

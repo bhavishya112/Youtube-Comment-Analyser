@@ -119,7 +119,7 @@ def download_comment_threads(video_url: str, max_comments: int = 10):
         videoId=video_id,
         maxResults=page_size,
         textFormat="plainText",
-        order="time",
+        order="relevance",
         fields="""
                 items(
                     snippet(
