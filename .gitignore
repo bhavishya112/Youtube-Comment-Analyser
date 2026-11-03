@@ -10,3 +10,4 @@ videos/
 *.pkl
 logs
 *.log
+analysis-pip/

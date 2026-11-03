@@ -12,32 +12,44 @@ from bertopic.representation import KeyBERTInspired
 from logger import setup_logger
 from bertopic._utils import MyLogger
 import logging
+import os
 
 logging.basicConfig(format="%(asctime)s - %(filename)s - %(message)s",
                     datefmt="%d %b %H:%M", level=logging.DEBUG, filename=f"logs/{__name__}.log")
 
-# bertopic_base_logger = logging.getLogger("BERTopic")
-# bertopic_base_logger.setLevel(logging.INFO)
 
-# file_handler = logging.FileHandler(
-#     "logs/topic_clustering.log",
-#     mode="a",
-#     encoding="utf-8"
-# )
-
-# formatter = logging.Formatter(
-#     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-# )
-
-# file_handler.setFormatter(formatter)
-# bertopic_base_logger.addHandler(file_handler)
 load_dotenv(".env")
 GROQ_API_KEY = getenv("GROQ_API_KEY")
-# logger = setup_logger(__name__, "logs/topic_clustering.log")
+NIM_API_KEY = getenv("NIM_API_KEY")
+
+EMB_MODEL = "nvidia/nemotron-3-embed-1b"
+
+emb_client = openai.OpenAI(
+    base_url="https://integrate.api.nvidia.com/v1",
+    api_key=NIM_API_KEY
+)
+
+
+def get_embeddings(docs: list[str], input_type="passage"):
+    response = emb_client.embeddings.create(
+        model=EMB_MODEL,
+        input=docs,
+        extra_body={
+            "input_type": input_type,
+            "truncate": "END"
+        }
+    )
+
+    embeddings = [
+        item.embedding
+        for item in sorted(response.data, key=lambda x: x.index)
+    ]
+
+    return np.asarray(embeddings, dtype=np.float32)
 
 
 try:
-    EMB_MODEL = SentenceTransformer("AkshitaS/bhasha-embed-v0")
+    # EMB_MODEL = SentenceTransformer("AkshitaS/bhasha-embed-v0")
     # EMB_MODEL = SentenceTransformer("baai/bge-m3")
 
     with open("stopwords.txt", "r", encoding="utf-8") as f:
@@ -49,24 +61,6 @@ try:
     # representation_model = KeyBERTInspired()
     client = openai.OpenAI(
         api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1")
-
-    class OpenAIEmbeddings:
-        def __init__(self, model="bge-m3"):
-            self.model = model
-
-        def __call__(self, docs: pd.Series):
-            # docs is a list of strings
-
-            response = client.embeddings.create(
-                input=docs, model=self.model
-            )
-            embeddings = [i.embedding for i in response.data]
-            # convert list of embedding vectors to a 2D numpy array
-            return np.asarray(embeddings, dtype=float)
-
-    def get_embeddings(docs: list[str]):
-        # return OpenAIEmbeddings()(docs)
-        return np.asarray(EMB_MODEL.encode(docs))
 
     def cluster_comments(docs: list[str]):
         """Uses Bertopic for Clustering comments, internally piped to Local LLM for Topic Generation.
