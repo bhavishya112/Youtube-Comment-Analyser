@@ -1,3 +1,5 @@
+from os import getenv
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
@@ -9,26 +11,30 @@ from bertopic.representation import OpenAI
 from bertopic.representation import KeyBERTInspired
 from logger import setup_logger
 from bertopic._utils import MyLogger
-import logging 
-logger = MyLogger()
+import logging
 
-logger.configure("INFO")  # Tracks only ERROR and CRITICAL levels
+logging.basicConfig(format="%(asctime)s - %(filename)s - %(message)s",
+                    datefmt="%d %b %H:%M", level=logging.DEBUG, filename=f"logs/{__name__}.log")
 
-# 2. Extract the underlying standard Python logger object
-bertopic_base_logger = logging.getLogger("BERTopic")
+# bertopic_base_logger = logging.getLogger("BERTopic")
+# bertopic_base_logger.setLevel(logging.INFO)
 
-# 3. Create a file handler to route the log stream to a text file
-file_handler = logging.FileHandler("logs/topic_clustering.log", mode="a")
+# file_handler = logging.FileHandler(
+#     "logs/topic_clustering.log",
+#     mode="a",
+#     encoding="utf-8"
+# )
 
-# 4. Set a readable formatting layout for the file output
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-file_handler.setFormatter(formatter)
+# formatter = logging.Formatter(
+#     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# )
 
-# 5. Attach the file handler to BERTopic's logger engine
-bertopic_base_logger.addHandler(file_handler)
-
-
+# file_handler.setFormatter(formatter)
+# bertopic_base_logger.addHandler(file_handler)
+load_dotenv(".env")
+GROQ_API_KEY = getenv("GROQ_API_KEY")
 # logger = setup_logger(__name__, "logs/topic_clustering.log")
+
 
 try:
     EMB_MODEL = SentenceTransformer("AkshitaS/bhasha-embed-v0")
@@ -42,7 +48,7 @@ try:
 
     # representation_model = KeyBERTInspired()
     client = openai.OpenAI(
-        api_key="sk-...", base_url="http://127.0.0.1:11434/v1")
+        api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1")
 
     class OpenAIEmbeddings:
         def __init__(self, model="bge-m3"):
@@ -52,7 +58,7 @@ try:
             # docs is a list of strings
 
             response = client.embeddings.create(
-                input=docs, model=self.model, extra_body={"keep_alive": -1}
+                input=docs, model=self.model
             )
             embeddings = [i.embedding for i in response.data]
             # convert list of embedding vectors to a 2D numpy array
@@ -74,7 +80,7 @@ try:
                 topics (list(int)) : list of topics ids\\
                 probabilities (ndarray): confidence scores for each topic"""
         representation_model = OpenAI(
-            client=client, model="ibm/granite4.1:3b", chat=True)
+            client=client, model="qwen/qwen3.8-27b", chat=True)
         # client=client, model="gemma3n:e2b", chat=True)
         hdbscan_model = HDBSCAN(
             min_cluster_size=10, metric="euclidean", prediction_data=True
@@ -111,7 +117,7 @@ except Exception as E:
     # from winsound import Beep
     # Beep(1000, 1000)
     import sys
-    logger.exception(E)
+    logging.error(E)
 
 # from scrape_comments import get_comments
 

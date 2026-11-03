@@ -9,3 +9,4 @@ videos/
 *.agents
 *.pkl
 logs
+*.log
